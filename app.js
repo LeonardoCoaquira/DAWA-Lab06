@@ -1,65 +1,125 @@
 const express = require('express');
 const app = express();
+const port = 3000;
 
+const portafolios = [
+  {
+    id: '1',
+    nombre: 'Juan Pérez',
+    descripcion: 'Soy un desarrollador web con experiencia en la creación de aplicaciones web y sitios responsivos. Me apasiona la tecnología y estoy constantemente aprendiendo nuevas habilidades.',
+    proyectos: [
+      {
+        nombre: 'Tienda en línea',
+        descripcion: 'Desarrollo de una tienda en línea con integración de pago y carrito de compras.',
+      },
+      {
+        nombre: 'Blog personal',
+        descripcion: 'Creación de un blog personal utilizando tecnologías modernas como React y Node.js.',
+      },
+    ],
+    user: {
+      correo: 'juan@example.com',
+      linkedin: 'https://www.linkedin.com/in/juanperez',
+      github: 'https://github.com/juanperez',
+    },
+    habilidades: ['HTML5', 'JavaScript', 'React', 'Node.js'],
+    tecnologias: ['Express.js', 'MongoDB', 'SASS'],
+  },
+  {
+    id: '2',
+    nombre: 'María González',
+    descripcion: 'Soy una ingeniera de software con experiencia en el desarrollo de aplicaciones móviles y sistemas empresariales. Me encanta resolver problemas complejos y trabajar en equipo.',
+    proyectos: [
+      {
+        nombre: 'Aplicación de gestión de tareas',
+        descripcion: 'Desarrollo de una aplicación para gestionar tareas y recordatorios.',
+      },
+      {
+        nombre: 'Sistema de contabilidad',
+        descripcion: 'Creación de un sistema de contabilidad empresarial con generación de informes financieros.',
+      },
+    ],
+    user: {
+      correo: 'maria@example.com',
+      linkedin: 'https://www.linkedin.com/in/mariagonzalez',
+      github: 'https://github.com/mariagonzalez',
+    },
+    habilidades: ['Java', 'Swift', 'Python', 'SQL'],
+    tecnologias: ['Android Studio', 'iOS SDK', 'Spring Boot'],
+  },
+  {
+    id: '3',
+    nombre: 'Carlos Rodríguez',
+    descripcion: 'Soy un entusiasta de la inteligencia artificial y la ciencia de datos. Mi objetivo es aplicar el aprendizaje automático para resolver problemas del mundo real y tomar decisiones informadas.',
+    proyectos: [
+      {
+        nombre: 'Sistema de recomendación de películas',
+        descripcion: 'Desarrollo de un sistema de recomendación de películas basado en el historial de visualización.',
+      },
+      {
+        nombre: 'Análisis de datos de ventas',
+        descripcion: 'Análisis de datos de ventas para identificar tendencias y oportunidades de mejora.',
+      },
+    ],
+    user: {
+      correo: 'carlos@example.com',
+      linkedin: 'https://www.linkedin.com/in/carlosrodriguez',
+      github: 'https://github.com/carlosrodriguez',
+    },
+    habilidades: ['Python', 'Machine Learning', 'Deep Learning', 'Data Analysis'],
+    tecnologias: ['TensorFlow', 'Scikit-Learn', 'Jupyter Notebook'],
+  },
+];
+
+
+app.set('view engine', 'pug');
 app.use(express.static('public'));
 
-// Configurar el motor de plantillas
-app.set('view engine', 'pug');
-app.set('views', './views');
-
-// Ruta para renderizar la plantilla Pug
-app.get('/pug', (req, res) => {
-  res.render('index', { nombre: 'Usuario Pug' });
+// Middleware para configurar informacionPersonal
+app.use('/:id', (req, res, next) => {
+  const id = req.params.id;
+  if (id >= 1 && id <= portafolios.length) {
+    req.informacionPersonal = portafolios[id - 1];
+    req.id = id; // Agregar el ID a la solicitud
+    next(); // Continúa con el manejo de la ruta
+  } else {
+    res.status(404).send('Portafolio no encontrado');
+  }
 });
 
-// Configurar EJS como motor de plantillas para una ruta específica
-app.engine('ejs', require('ejs').renderFile);
-
-// Ruta para renderizar la plantilla EJS
-app.get('/ejs', (req, res) => {
-  res.render('index.ejs', { nombre: 'Usuario EJS' });
+// Rutas que utilizan informacionPersonal y devuelven el ID
+app.get('/:id', (req, res) => {
+  res.render('index', { 
+    informacionPersonal: req.informacionPersonal,
+    id: req.id,
+    nombre: req.informacionPersonal.nombre });
 });
 
-app.get('/perfil/:id', (req, res) => {
-    const userId = req.params.id;
-    // Aquí puedes buscar los datos del usuario en una base de datos, por ejemplo
-    const user = { id: userId, nombre: 'Usuario ' + userId };
-    res.render('perfil', { user: user });
-});  
-
-// Ruta para renderizar la plantilla Pug
-app.get('/miplantilla-pug', (req, res) => {
-    res.render('miplantilla', { mensaje: '¡Hola desde la plantilla Pug!' });
-});
-  
-// Ruta para renderizar la plantilla EJS
-app.get('/miplantilla-ejs', (req, res) => {
-    res.render('miplantilla.ejs', { mensaje: '¡Hola desde la plantilla EJS!' });
+app.get('/', (req, res) => {
+  res.render('default');
 });
 
-const productos = [
-    {
-      id: 1,
-      nombre: 'Producto 1',
-      precio: 100
-    },
-    {
-      id: 2,
-      nombre: 'Producto 2',
-      precio: 200
-    },
-    {
-      id: 3,
-      nombre: 'Producto 3',
-      precio: 300
-    }
-];
-  
-app.get('/miplantilla', (req, res) => {
-    res.render('miplantilla', { productos });
-});  
+app.get('/:id/skills', (req, res) => {
+  res.render('skills', { 
+    habilidades: req.informacionPersonal.habilidades, 
+    tecnologias: req.informacionPersonal.tecnologias, 
+    id: req.id, 
+    nombre: req.informacionPersonal.nombre
+  });
+});
 
-// Iniciar el servidor en el puerto 3000
-app.listen(3000, () => {
-  console.log('Aplicación web dinámica ejecutándose en el puerto 3000');
+app.get('/:id/contact', (req, res) => {
+  res.render('contact', { 
+    user: req.informacionPersonal.user, 
+    id: req.id, 
+    nombre: req.informacionPersonal.nombre
+  });
+});
+
+
+// Ruta para archivos estáticos (CSS, JS, imágenes, etc.)
+app.use('/public', express.static('public'));
+
+app.listen(port, () => {
+  console.log(`El servidor está escuchando en el puerto ${port}`);
 });
